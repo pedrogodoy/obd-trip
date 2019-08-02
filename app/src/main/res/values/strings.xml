@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">obd-trip</string>
+    <string name="edit_message">Insira seu nome</string>
+</resources>
