@@ -286,8 +286,6 @@ public class ObdView extends AppCompatActivity {
     public void btnEnviaTrajeto(View view){
         makeJson();
         this.finish();
-
-
         Toast.makeText(getApplicationContext(), "Trajeto finalizado!", Toast.LENGTH_SHORT).show();
     }
 
@@ -329,7 +327,7 @@ public class ObdView extends AppCompatActivity {
 
     public String post(final JSONObject data){
         try{
-            final URL url = new URL("http://18.228.199.189:4000/trajeto/create");
+            final URL url = new URL("http://localhost:4000/trajeto/create");
             final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
             connection.setRequestProperty("Accept", "application/json");
