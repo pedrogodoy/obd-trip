@@ -1,6 +1,4 @@
-package com.unigran.obd_trip.Entidade;
-
-import java.util.Date;
+package com.unigran.obd_trip.model;
 
 public class ETrajeto {
     private int id;

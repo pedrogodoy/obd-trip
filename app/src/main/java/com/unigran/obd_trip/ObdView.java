@@ -4,9 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Environment;
 import android.os.StrictMode;
-import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,32 +14,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sohrab.obd.reader.application.ObdPreferences;
-import com.sohrab.obd.reader.obdCommand.ObdCommand;
 import com.sohrab.obd.reader.obdCommand.ObdConfiguration;
-import com.sohrab.obd.reader.obdCommand.SpeedCommand;
-import com.sohrab.obd.reader.obdCommand.engine.RPMCommand;
 import com.sohrab.obd.reader.service.ObdReaderService;
 import com.sohrab.obd.reader.trip.TripRecord;
-import com.unigran.obd_trip.DAO.DaoTrajeto;
-import com.unigran.obd_trip.Entidade.ETrajeto;
+import com.unigran.obd_trip.model.ETrajeto;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_OBD_CONNECTION_STATUS;
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_READ_OBD_REAL_TIME_DATA;
@@ -140,60 +128,11 @@ public class ObdView extends AppCompatActivity {
         salvaBanco();
     }
 
-    /*public void salvaLog(){
-        //salvar log
-        diretorioApp = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                + "/"+nomeDiretorio+"/";
 
-        diretorio = new File(diretorioApp);
-        diretorio.mkdirs();
-
-        //Quando o File() tem um parâmetro ele cria um diretório.
-        //Quando tem dois ele cria um arquivo no diretório onde é informado.
-        File fileExt = new File(diretorioApp, "log-obd.txt");
-
-        //Cria o arquivo
-        if(!fileExt.exists()){
-            fileExt.getParentFile().mkdirs();
-        }
-
-
-        //Abre o arquivo
-        FileOutputStream fosExt = null;
-        try {
-            fosExt = new FileOutputStream(fileExt, true);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        //Escreve no arquivo
-        try {
-            fosExt.write(mObdInfoTextView.getText().toString().getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //Obrigatoriamente você precisa fechar
-        try {
-            fosExt.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        SystemClock.sleep(500);
-        Toast.makeText(getApplicationContext(), "Salvo LOG", Toast.LENGTH_SHORT).show();
-
-
-    }*/
 
     public void salvaBanco(){
-        ETrajeto trajeto = new ETrajeto();
-        DaoTrajeto daoTrajeto = new DaoTrajeto(getApplicationContext());
 
-        trajeto.setPlaca("hora teste");
 
-        String resultado = daoTrajeto.salvarTrajeto(trajeto);
-        Toast.makeText(getApplicationContext(), resultado, Toast.LENGTH_SHORT).show();
 
     }
 
@@ -285,6 +224,7 @@ public class ObdView extends AppCompatActivity {
 
     public void btnEnviaTrajeto(View view){
         makeJson();
+        onDestroy();
         this.finish();
         Toast.makeText(getApplicationContext(), "Trajeto finalizado!", Toast.LENGTH_SHORT).show();
     }

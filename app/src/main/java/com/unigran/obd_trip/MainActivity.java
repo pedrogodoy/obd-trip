@@ -17,7 +17,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     public void btn_obd(View view){
 
         Bundle bundle = new Bundle();
