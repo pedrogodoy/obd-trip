@@ -16,6 +16,7 @@ public class ListaVeiculosView {
     private final VeiculoDAO dao;
     private final Context context;
 
+
     public ListaVeiculosView(Context context) {
         this.context = context;
         this.adapter = new ListaVeiculosAdapter(this.context);
@@ -26,6 +27,7 @@ public class ListaVeiculosView {
 
 
     public void atualizaVeiculos() {
+        //task para buscar lista de veículos do bd
         new BuscaVeiculoTask(dao, adapter).execute();
 
     }
