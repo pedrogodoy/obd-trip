@@ -19,7 +19,7 @@ public interface VeiculoService {
 
     @FormUrlEncoded
     @POST("auth/login")
-    Call<List<Login>> login(
+    Call<List<Veiculo>> login(
             @Field("login") String login,
             @Field("senha") String senha
     );

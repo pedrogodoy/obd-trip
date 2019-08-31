@@ -43,37 +43,42 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void btn_obd(View view){
+
         //Insere veículo para teste do banco local
-        Veiculo v = new Veiculo();
+        /*Veiculo v = new Veiculo();
         v.setAno(2001);
         v.setCor("branco");
         v.setEmpresa_id(1);
         v.setMarca("volks");
         v.setModelo("parati");
         v.setPlaca("htq-1293");
-        v.setUsuario_id(1);
+        v.setUsuario_id(1); */
 
-        Login login = new Login();
-        login.setLogin("root");
-        login.setSenha("root");
+
 
 //      salvaVeiculo(v);
-        salvaNaApi(login);
+        salvaNaApi();
 
 
     }
 
     //função que faz a autenticação via API
-    private void salvaNaApi(Login login) {
+    private void salvaNaApi() {
 
-        Call<List<Login>> call = service.login(usuario.getText().toString(), senha.getText().toString()); //
+        Call<List<Veiculo>> call = service.login(usuario.getText().toString(), senha.getText().toString()); //
 
-        call.enqueue(new Callback<List<Login>>() {
+        call.enqueue(new Callback<List<Veiculo>>() {
             @Override
-            public void onResponse(Call<List<Login>> call, Response<List<Login>> response) {
+            public void onResponse(Call<List<Veiculo>> call, Response<List<Veiculo>> response) {
                 if(response.isSuccessful()){
                     //Se o login estiver retornando os veículos, autentica.
+
                     if(response.body() != null){
+                        dao.removeAll();  //Apaga os veículos existentes no banco
+                        for(Veiculo veiculo: response.body()){
+                            dao.salva(veiculo); //salva a nova lista de veículo
+                        }
+
                         Toast.makeText(getApplicationContext(), "Logado OK!", Toast.LENGTH_SHORT).show();
                         startActivity(intent);  //Inicia a activity dos veículos
                         finish();
@@ -86,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
             //Caso a autenticação esteja inválida
             @Override
-            public void onFailure(Call<List<Login>> call, Throwable t) {
+            public void onFailure(Call<List<Veiculo>> call, Throwable t) {
                 Toast.makeText(getApplicationContext(), "Usuário ou senha inválida!", Toast.LENGTH_SHORT).show();
                 //Toast.makeText(getApplicationContext(), "Falha de comunicação: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 t.printStackTrace();

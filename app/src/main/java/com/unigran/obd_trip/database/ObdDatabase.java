@@ -19,6 +19,7 @@ public abstract class ObdDatabase extends RoomDatabase {
         if (instance == null) {
             instance = Room.databaseBuilder(context, ObdDatabase.class, "obd.db")
                     .fallbackToDestructiveMigration() // limpar banco
+                    .allowMainThreadQueries()
                     .build();
         }
         return instance;

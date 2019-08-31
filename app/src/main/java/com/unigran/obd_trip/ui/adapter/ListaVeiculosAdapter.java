@@ -50,7 +50,7 @@ public class ListaVeiculosAdapter extends BaseAdapter {
 
     private void vincula(View view, Veiculo veiculo) {
         TextView nome = view.findViewById(R.id.item_veiculo_nome);
-        nome.setText(veiculo.getMarca()); //inseri o nome no textview
+        nome.setText(veiculo.getModelo()); //inseri o nome no textview
         TextView placa = view.findViewById(R.id.item_veiculo_placa);
         placa.setText(veiculo.getPlaca());
 

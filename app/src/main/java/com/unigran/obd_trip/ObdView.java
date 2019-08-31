@@ -35,9 +35,7 @@ import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_OBD_CONNECT
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_READ_OBD_REAL_TIME_DATA;
 
 public class ObdView extends AppCompatActivity {
-
     private TextView mObdInfoTextView;
-    private TextView mObdInfoConsole;
     private TextView viewDistancia;
     private TextView viewConsumo;
     private  TextView viewVelocidade;
@@ -58,31 +56,13 @@ public class ObdView extends AppCompatActivity {
         viewDistancia = findViewById(R.id.txtDistancia);
         viewTemp = findViewById(R.id.txtTemp);
         viewVelocidade = findViewById(R.id.txtVelocidade);
-        //mObdInfoConsole = findViewById(R.id.textConsole);
-
-
-        viewDistancia.setText("Distancia: " + "80" +" KM");
-        viewConsumo.setText("Consumo: " + "15" + "Litros");
+        viewDistancia.setText("Distancia Percorrida: 0 KM");
+        viewConsumo.setText("Combustível consumido: 0");
         viewVelocidade.setText("Velocidade: " + "76" + "KM/H");
         viewTemp.setText("Temperatura motor: " + "345 Cº");
 
-
-        //pegar nome kdo motorista via bundle
-        if(null != getIntent()){
-            trajetoobj.setNome_motorista(getIntent().getStringExtra("nomeMotorista"));
-
-        }
-
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-
-         /*
-         adicione o comando required em arrayList e defina como ObdConfiguration.
-         * Se você não definir nenhum comando ou passar null, então todos os comandos OBD serão solicitados.
-         * Portanto, recomenda-se definir o comando que é necessário apenas como uma linha comentada.
-
-          */
-
         //lista de comandos
 /*
         ArrayList<ObdCommand> obdCommands = new ArrayList<>();
@@ -90,15 +70,13 @@ public class ObdView extends AppCompatActivity {
         obdCommands.add(new RPMCommand());
         ObdConfiguration.setmObdCommands(this, obdCommands); */
 
-
         // Passar null significa que estamos executando tod o comando OBD por enquanto,
         // mas você deve adicionar o comando requerido para recuperação rápida, como as linhas comentadas acima.
-
         ObdConfiguration.setmObdCommands(this, null);
 
 
-        // setar o preco da gasolina para o calculo . Default is 7 $/l
-        float gasPrice = 7; // per litre, you should initialize according to your requirement.
+        //Setar o preço da gasolina para o calculo
+        float gasPrice = 4; // Valor por litro
         ObdPreferences.get(this).setGasPrice(gasPrice);
         /**
          * Registre o receptor com alguma ação relacionada ao status da conexão OBD
@@ -107,32 +85,19 @@ public class ObdView extends AppCompatActivity {
         intentFilter.addAction(ACTION_READ_OBD_REAL_TIME_DATA);
         intentFilter.addAction(ACTION_OBD_CONNECTION_STATUS);
         registerReceiver(mObdReaderReceiver, intentFilter);
-
-        //start service which will execute in background for connecting and execute command until you stop
         //iniciar o serviço que será executado em segundo plano para conectar e executar o comando até que você pare
 
         startService(new Intent(this, ObdReaderService.class));
-
-
-
-
-        //while(mObdInfoTextView.length() > 15){
-        //    salvaLog();
-
-        //}
-
     }
 
 
     public void btnSalva(View view){
-        salvaBanco();
+
     }
 
 
 
     public void salvaBanco(){
-
-
 
     }
 
@@ -150,19 +115,15 @@ public class ObdView extends AppCompatActivity {
     }
 
     /**
-     * Broadcast Receiver to receive OBD connection status and real time data
-     *
      * Receptor de Broadcast para receber status de conexão OBD e dados em tempo real
      */
     private final BroadcastReceiver mObdReaderReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
             findViewById(R.id.progressBar).setVisibility(View.GONE);
             mObdInfoTextView.setVisibility(View.VISIBLE);
             String action = intent.getAction();
-            Toast.makeText(ObdView.this, action, Toast.LENGTH_SHORT).show();
-            //salvaLog();
+            //Toast.makeText(ObdView.this, action, Toast.LENGTH_SHORT).show();
 
             if (action.equals(ACTION_OBD_CONNECTION_STATUS)) {
 
@@ -171,34 +132,21 @@ public class ObdView extends AppCompatActivity {
                 //Toast.makeText(ObdView.this, connectionStatusMsg, Toast.LENGTH_SHORT).show();
 
                 if (connectionStatusMsg.equals(getString(R.string.obd_connected))) {
-                    //OBD connected  do what want after OBD connection
                     //OBD conectado fazer o que quiser depois da conexão OBD
 
-                   /* while(mObdInfoTextView != null){
-                        salvaLog();
-                    } */
-
-
                 } else if (connectionStatusMsg.equals(getString(R.string.connect_lost))) {
-                    //OBD disconnected  do what want after OBD disconnection
+                    //OBD desconectado, tratar erro
                 } else {
                     //aqui você pode verificar a conexão OBD e o status de emparelhamento
                 }
 
-            } else if (action.equals(ACTION_READ_OBD_REAL_TIME_DATA)) {
-
+            } else if (action.equals(ACTION_READ_OBD_REAL_TIME_DATA)) {  //Caso o serviço retorne a constante REAL_TIME
                 TripRecord tripRecord = TripRecord.getTripRecode(ObdView.this);
-                //mObdInfoTextView.setText(tripRecord.toString());
-                //salvaLog();
-
-                // aqui você pode buscar dados em tempo real do TripRecord usando métodos getter como
-
-                //mObdInfoConsole.setText(tripRecord.getSpeed().toString());
+                // aqui você pode buscar dados em tempo real do TripRecord usando métodos getter.
 
                 viewDistancia.setText("Distancia: " + tripRecord.getmDistanceTravel() +" KM");
                 viewConsumo.setText("Consumo: " + tripRecord.getmDrivingFuelConsumption() + "Litros");
                 viewVelocidade.setText("Velocidade: " + tripRecord.getSpeedMax().toString() + "KM/H");
-
                 viewTemp.setText("Temperatura motor: " + tripRecord.getmEngineCoolantTemp());
 
                 // Preencher objeto com os dados do veiculo
@@ -211,26 +159,9 @@ public class ObdView extends AppCompatActivity {
                 }catch (Exception err){
                     Toast.makeText(getApplicationContext(), "Erro ao salvar no objeto: " + err.getMessage(), Toast.LENGTH_LONG).show();
                 }
-
-
-
-
-
             }
-
         }
     };
-
-
-    public void btnEnviaTrajeto(View view){
-        makeJson();
-        onDestroy();
-        this.finish();
-        Toast.makeText(getApplicationContext(), "Trajeto finalizado!", Toast.LENGTH_SHORT).show();
-    }
-
-
-
 
     public void makeJson(){
         try{
@@ -263,8 +194,6 @@ public class ObdView extends AppCompatActivity {
 
     }
 
-
-
     public String post(final JSONObject data){
         try{
             final URL url = new URL("http://localhost:4000/trajeto/create");
@@ -293,8 +222,6 @@ public class ObdView extends AppCompatActivity {
 
         return null;
     }
-
-
 
     @Override
     protected void onDestroy() {
