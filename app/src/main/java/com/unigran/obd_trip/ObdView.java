@@ -12,15 +12,18 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.sohrab.obd.reader.application.ObdPreferences;
 import com.sohrab.obd.reader.obdCommand.ObdConfiguration;
 import com.sohrab.obd.reader.service.ObdReaderService;
 import com.sohrab.obd.reader.trip.TripRecord;
+import com.unigran.obd_trip.database.ObdDatabase;
+import com.unigran.obd_trip.database.dao.TrajetoDAO;
+import com.unigran.obd_trip.database.dao.VeiculoDAO;
 import com.unigran.obd_trip.model.ETrajeto;
+import com.unigran.obd_trip.model.Trajeto;
+import com.unigran.obd_trip.model.Veiculo;
 
 import org.json.JSONObject;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.InputStream;
@@ -30,7 +33,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Date;
 import java.util.Scanner;
-
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_OBD_CONNECTION_STATUS;
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_READ_OBD_REAL_TIME_DATA;
 
@@ -44,6 +46,13 @@ public class ObdView extends AppCompatActivity {
     private String nomeDiretorio = "LOGOBD";
     private String diretorioApp;
     private  ETrajeto trajetoobj = new ETrajeto();
+    private int id_veiculo;
+    private Veiculo veiculo;
+    private Trajeto trajeto;
+    private boolean obdConectado = false;
+
+    VeiculoDAO veiculoDao;
+    TrajetoDAO trajetoDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +69,15 @@ public class ObdView extends AppCompatActivity {
         viewConsumo.setText("Combustível consumido: 0");
         viewVelocidade.setText("Velocidade: " + "76" + "KM/H");
         viewTemp.setText("Temperatura motor: " + "345 Cº");
+        if(trajeto == null){
+            trajeto = new Trajeto();
+        }
+
+
+
+        //Pega o ID do veiculo selecionado via bundle
+        id_veiculo = getIntent().getIntExtra("veiculo", 4);
+
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -86,21 +104,28 @@ public class ObdView extends AppCompatActivity {
         intentFilter.addAction(ACTION_OBD_CONNECTION_STATUS);
         registerReceiver(mObdReaderReceiver, intentFilter);
         //iniciar o serviço que será executado em segundo plano para conectar e executar o comando até que você pare
-
         startService(new Intent(this, ObdReaderService.class));
+
+        //instancia o veículo
+        ObdDatabase database = ObdDatabase.getInstance(this);
+        veiculoDao = database.getVeiculoDAO();
+        trajetoDao = database.getTrajetoDAO();
+        veiculo = veiculoDao.buscaVeiculoSelecionado(id_veiculo);
+
+        //instancia o trajeto base
+        criaTrajetoOffline();
+
+
+
     }
 
 
     public void btnSalva(View view){
-
+        Toast.makeText(this, "Trajeto Finalizado", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
-
-
-
-    public void salvaBanco(){
-
-    }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) { //Botão adicional na ToolBar
@@ -123,19 +148,17 @@ public class ObdView extends AppCompatActivity {
             findViewById(R.id.progressBar).setVisibility(View.GONE);
             mObdInfoTextView.setVisibility(View.VISIBLE);
             String action = intent.getAction();
-            //Toast.makeText(ObdView.this, action, Toast.LENGTH_SHORT).show();
 
             if (action.equals(ACTION_OBD_CONNECTION_STATUS)) {
 
                 String connectionStatusMsg = intent.getStringExtra(ObdReaderService.INTENT_OBD_EXTRA_DATA);
                 mObdInfoTextView.setText(connectionStatusMsg);
-                //Toast.makeText(ObdView.this, connectionStatusMsg, Toast.LENGTH_SHORT).show();
-
                 if (connectionStatusMsg.equals(getString(R.string.obd_connected))) {
                     //OBD conectado fazer o que quiser depois da conexão OBD
+                    Toast.makeText(context, "OBD conectado, bom percurso!", Toast.LENGTH_SHORT).show();
 
                 } else if (connectionStatusMsg.equals(getString(R.string.connect_lost))) {
-                    //OBD desconectado, tratar erro
+                    Toast.makeText(context, "A conexão com o OBD foi perdida!", Toast.LENGTH_SHORT).show();
                 } else {
                     //aqui você pode verificar a conexão OBD e o status de emparelhamento
                 }
@@ -148,79 +171,66 @@ public class ObdView extends AppCompatActivity {
                 viewConsumo.setText("Consumo: " + tripRecord.getmDrivingFuelConsumption() + "Litros");
                 viewVelocidade.setText("Velocidade: " + tripRecord.getSpeedMax().toString() + "KM/H");
                 viewTemp.setText("Temperatura motor: " + tripRecord.getmEngineCoolantTemp());
-
+                obdConectado = true;
                 // Preencher objeto com os dados do veiculo
                 try{
-                    trajetoobj.setDistancia(tripRecord.getmDistanceTravel()); //pega distancia percorrida
-                    trajetoobj.setConsumo(tripRecord.getmFuelConsumptionRate()); //pega taxa de consumo de combustivel
-                    trajetoobj.setHora_inicio( new Date().toString()); //pega a data de inicio do percurso
-                    trajetoobj.setVelocidade_max(tripRecord.getSpeedMax());
-                    trajetoobj.setTemperatura_motor(tripRecord.getmEngineOilTemp());
+                    //Busca último trajeto do banco de dados
+                    trajeto = trajetoDao.buscaUltimoTrajeto();
+                    trajeto.setConsumo(tripRecord.getmFuelConsumptionRate());
+                    trajeto.setDistancia_km(Float.toString(tripRecord.getmDistanceTravel()));
+                    trajeto.setTemperatura_motor(tripRecord.getmEngineOilTemp());
+                    trajeto.setVelocidade_maxima(tripRecord.getSpeedMax().toString());
+                    //Atualiza no banco
+                    trajetoDao.edita(trajeto);
+
                 }catch (Exception err){
-                    Toast.makeText(getApplicationContext(), "Erro ao salvar no objeto: " + err.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Erro ao salvar informações: " + err.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         }
     };
 
-    public void makeJson(){
-        try{
-            trajetoobj.setHora_fim(new Date().toString()); //pega a hora final do fim do trajeto
-
-            //se nao conseguir pegar hora inicial, gravamos a do fim.
-            if(trajetoobj.getHora_inicio() == null){
-                trajetoobj.setHora_inicio(new Date().toString()); //pega a hora final do fim do trajeto
-            }
-            if(trajetoobj.getConsumo() == null || trajetoobj.getTemperatura_motor() == null){
-                trajetoobj.setConsumo("null");
-                trajetoobj.setTemperatura_motor("null");
-            }
-
-            JSONObject trajeto = new JSONObject();
-
-            trajeto.put("distancia", trajetoobj.getDistancia());
-            trajeto.put("consumo", trajetoobj.getConsumo());
-            trajeto.put("horaInicio", trajetoobj.getHora_inicio());
-            trajeto.put("horaFim", trajetoobj.getHora_fim());
-            trajeto.put("velocidadeMaxima", trajetoobj.getVelocidade_max());
-            trajeto.put("temperaturaMotor", trajetoobj.getTemperatura_motor());
-            trajeto.put("motorista", trajetoobj.getNome_motorista());
-            trajeto.put("veiculoId", 1);
-
-            post(trajeto);
-        }catch (Exception e){
-            Toast.makeText(getApplicationContext(), "Erro ao enviar trajeto: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-
+    //Cria as informações iniciais do trajeto
+    public void criaTrajetoOffline(){
+        trajeto.setConsumo("38");
+        trajeto.setDistancia_km("47");
+        trajeto.setHora_fim(new Date().toString());
+        trajeto.setHora_inicio(new Date().toString());
+        trajeto.setTemperatura_motor("218");
+        trajeto.setVelocidade_maxima("89");
+        trajeto.setEmpresa_id(veiculo.getEmpresa_id());
+        trajeto.setUsuario_id(veiculo.getUsuario_id());
+        trajeto.setVeiculo_id(veiculo.getId());
+        //Atualiza o os TextViews
+        viewDistancia.setText("Distancia Percorrida: " + trajeto.getDistancia_km());
+        viewConsumo.setText("Combustível consumido: " + trajeto.getConsumo());
+        viewVelocidade.setText("Velocidade: " + trajeto.getVelocidade_maxima() + "KM/H");
+        viewTemp.setText("Temperatura motor: " + trajeto.getTemperatura_motor() + " Cº");
+        //Salva as informações iniciais do trajeto no banco de dados
+        trajetoDao.salva(trajeto);
     }
 
-    public String post(final JSONObject data){
-        try{
-            final URL url = new URL("http://localhost:4000/trajeto/create");
-            final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    //Método utilizado para fins de testes locais
+    public void atualizaTrajetoOffline(){
+        trajeto = trajetoDao.buscaUltimoTrajeto();
 
-            connection.setRequestProperty("Accept", "application/json");
-            connection.setRequestProperty("Content-type", "application/json");
-            connection.setRequestMethod("POST");
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
+        trajeto.setConsumo("999");
+        trajeto.setDistancia_km("9999");
+        trajeto.setEmpresa_id(1);
+        trajeto.setHora_fim(new Date().toString());
+        trajeto.setHora_inicio(new Date().toString());
+        trajeto.setTemperatura_motor("21812");
+        trajeto.setVelocidade_maxima("89622");
+        trajeto.setUsuario_id(1);
+        trajeto.setVeiculo_id(1);
 
-            final OutputStream outputStream = connection.getOutputStream();
-            final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
 
-            writer.write(data.toString());
-            writer.flush();
-            writer.close();
-            outputStream.close();
 
-            connection.connect();
-            final InputStream stream = connection.getInputStream();
-            return new Scanner(stream, "UTF-8").next();
-        }catch (Exception e){
-            Log.e("Errpr", "Erro 1", e);
-        }
-
-        return null;
+        trajetoDao.edita(trajeto);
+        viewDistancia.setText("Distancia Percorrida: " + trajeto.getDistancia_km());
+        viewConsumo.setText("Combustível consumido: " + trajeto.getConsumo());
+        viewVelocidade.setText("Velocidade: " + trajeto.getVelocidade_maxima() + "KM/H");
+        viewTemp.setText("Temperatura motor: " + trajeto.getTemperatura_motor() + " Cº");
     }
 
     @Override

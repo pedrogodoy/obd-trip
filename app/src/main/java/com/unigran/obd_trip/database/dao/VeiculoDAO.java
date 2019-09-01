@@ -21,6 +21,9 @@ public interface VeiculoDAO {
     @Query("SELECT * FROM VEICULO")
     List<Veiculo> todos();
 
+    @Query("SELECT * FROM VEICULO WHERE id = :id")
+    Veiculo buscaVeiculoSelecionado(int id);
+
     @Delete
     void remove(Trajeto trajeto);
 

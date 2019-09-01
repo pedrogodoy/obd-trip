@@ -35,8 +35,10 @@ public class ListaVeiculoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true); //Mostrar o botão
+        getSupportActionBar().setHomeButtonEnabled(true);      //Ativar o botão
         setContentView(R.layout.activity_lista_veiculo);
-        setTitle("Veículos");
+        setTitle("Selecione o seu veículo");
         listaVeiculosView = new ListaVeiculosView(this);
         configuraLista();
 
@@ -84,8 +86,9 @@ public class ListaVeiculoActivity extends AppCompatActivity {
     //Inicia a activity do trajeto
     private void abreObdView(Veiculo veiculo) {
         Intent vaiParaFormularioActivity = new Intent(ListaVeiculoActivity.this, ObdView.class);
-        vaiParaFormularioActivity.putExtra(CHAVE_VEICULO, veiculo);
+        vaiParaFormularioActivity.putExtra(CHAVE_VEICULO, veiculo.getId()); //Enviar ID do veículo para a activity OBD
         startActivity(vaiParaFormularioActivity);
+        finish();
     }
 
 }

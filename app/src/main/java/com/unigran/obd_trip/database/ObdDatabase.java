@@ -10,7 +10,7 @@ import com.unigran.obd_trip.database.dao.VeiculoDAO;
 import com.unigran.obd_trip.model.Trajeto;
 import com.unigran.obd_trip.model.Veiculo;
 
-@Database(entities = {Trajeto.class, Veiculo.class}, version = 1, exportSchema = false)
+@Database(entities = {Trajeto.class, Veiculo.class}, version = 2, exportSchema = false)
 public abstract class ObdDatabase extends RoomDatabase {
     static ObdDatabase instance;
 

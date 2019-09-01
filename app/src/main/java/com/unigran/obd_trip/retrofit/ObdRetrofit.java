@@ -1,6 +1,7 @@
 package com.unigran.obd_trip.retrofit;
 
 import com.unigran.obd_trip.model.Veiculo;
+import com.unigran.obd_trip.retrofit.service.TrajetoService;
 import com.unigran.obd_trip.retrofit.service.VeiculoService;
 
 import okhttp3.OkHttpClient;
@@ -12,16 +13,22 @@ Classe responsável pela comunicação com o WebService via Retrofit
  */
 public class ObdRetrofit {
     private final VeiculoService veiculoService;
+    private final TrajetoService trajetoService;
     public ObdRetrofit() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://192.168.0.15:3000/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         veiculoService = retrofit.create(VeiculoService.class);
+        trajetoService = retrofit.create(TrajetoService.class);
 
     }
 
     public VeiculoService getVeiculoService() {
         return veiculoService;
+    }
+
+    public TrajetoService getTrajetoService() {
+        return trajetoService;
     }
 }

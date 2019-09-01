@@ -14,13 +14,19 @@ import java.util.List;
 public interface TrajetoDAO {
     //métodos para o CRUD
     @Insert
-    Long salva(Trajeto aluno);
+    Long salva(Trajeto trajeto);
 
     @Query("SELECT * FROM TRAJETO")
     List<Trajeto> todos();
 
+    @Query("SELECT * FROM TRAJETO ORDER BY id")
+    Trajeto buscaUltimoTrajeto();
+
     @Delete
     void remove(Trajeto trajeto);
+
+    @Query("DELETE FROM TRAJETO")
+    void removeAll();
 
     @Update
     void edita(Trajeto trajeto);
