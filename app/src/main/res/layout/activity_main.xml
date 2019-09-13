@@ -36,7 +36,7 @@
         android:layout_marginBottom="80dp"
         android:background="@color/colorPrimary"
         android:onClick="btn_obd"
-        android:text="INICIAR VIAGEM"
+        android:text="INICIAR TRAJETO"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
