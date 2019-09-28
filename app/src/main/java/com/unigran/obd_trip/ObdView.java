@@ -67,7 +67,7 @@ public class ObdView extends AppCompatActivity {
         viewVelocidade = findViewById(R.id.txtVelocidade);
         viewDistancia.setText("Distancia Percorrida: 0 KM");
         viewConsumo.setText("Combustível consumido: 0");
-        viewVelocidade.setText("Velocidade: " + "76" + "KM/H");
+        viewVelocidade.setText("Velocidade: " + "76" + " Km /h");
         viewTemp.setText("Temperatura motor: " + "345 Cº");
         if(trajeto == null){
             trajeto = new Trajeto();
@@ -192,8 +192,8 @@ public class ObdView extends AppCompatActivity {
 
     //Cria as informações iniciais do trajeto
     public void criaTrajetoOffline(){
-        trajeto.setConsumo("38");
-        trajeto.setDistancia_km("47");
+        trajeto.setConsumo("38 Litros");
+        trajeto.setDistancia_km("47 Km");
         trajeto.setHora_fim(new Date().toString());
         trajeto.setHora_inicio(new Date().toString());
         trajeto.setTemperatura_motor("218");
@@ -204,7 +204,7 @@ public class ObdView extends AppCompatActivity {
         //Atualiza o os TextViews
         viewDistancia.setText("Distancia Percorrida: " + trajeto.getDistancia_km());
         viewConsumo.setText("Combustível consumido: " + trajeto.getConsumo());
-        viewVelocidade.setText("Velocidade: " + trajeto.getVelocidade_maxima() + "KM/H");
+        viewVelocidade.setText("Velocidade: " + trajeto.getVelocidade_maxima() + " Km/H");
         viewTemp.setText("Temperatura motor: " + trajeto.getTemperatura_motor() + " Cº");
         //Salva as informações iniciais do trajeto no banco de dados
         trajetoDao.salva(trajeto);

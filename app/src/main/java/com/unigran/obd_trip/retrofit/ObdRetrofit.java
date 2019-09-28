@@ -16,7 +16,7 @@ public class ObdRetrofit {
     private final TrajetoService trajetoService;
     public ObdRetrofit() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://52.67.164.12:3000/")
+                .baseUrl("http://18.228.42.199:3000/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         veiculoService = retrofit.create(VeiculoService.class);
