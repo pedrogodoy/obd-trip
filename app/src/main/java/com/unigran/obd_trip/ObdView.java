@@ -4,10 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.CountDownTimer;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -23,16 +23,9 @@ import com.unigran.obd_trip.model.ETrajeto;
 import com.unigran.obd_trip.model.Trajeto;
 import com.unigran.obd_trip.model.Veiculo;
 
-import org.json.JSONObject;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Date;
-import java.util.Scanner;
+import java.util.Random;
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_OBD_CONNECTION_STATUS;
 import static com.sohrab.obd.reader.constants.DefineObdReader.ACTION_READ_OBD_REAL_TIME_DATA;
 
@@ -50,6 +43,14 @@ public class ObdView extends AppCompatActivity {
     private Veiculo veiculo;
     private Trajeto trajeto;
     private boolean obdConectado = false;
+    private CountDownTimer cT;
+    private int countCT = 0;
+    private int consumo = 0;
+    private int distancia = 0;
+    private int velocidade = 0;
+    private int tempMotor = 0;
+    private boolean isObdOff = true;
+
 
     VeiculoDAO veiculoDao;
     TrajetoDAO trajetoDao;
@@ -114,7 +115,7 @@ public class ObdView extends AppCompatActivity {
 
         //instancia o trajeto base
         criaTrajetoOffline();
-
+        atualizaTrajetoOffline();
 
 
     }
@@ -125,6 +126,31 @@ public class ObdView extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void startCt() {
+        cT = new CountDownTimer(100000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                if (isObdOff == true){
+                    cT.cancel();
+                }
+
+            }
+
+            public void onFinish() {
+                //atualizaTrajetoOffline();
+                if (countCT < 10) {
+                    if (isObdOff) {
+                        startCt();
+                        countCT++;
+                    }
+                } else {
+                    //atualizaTrajetoOffline();
+                    isObdOff = false;
+                }
+            }
+        };
+        cT.start();
     }
 
     @Override
@@ -153,9 +179,13 @@ public class ObdView extends AppCompatActivity {
 
                 String connectionStatusMsg = intent.getStringExtra(ObdReaderService.INTENT_OBD_EXTRA_DATA);
                 mObdInfoTextView.setText(connectionStatusMsg);
+                //So chama o metodo caso o OBD esteja offline
+                //startCt();
+                //atualizaTrajetoOffline();
                 if (connectionStatusMsg.equals(getString(R.string.obd_connected))) {
                     //OBD conectado fazer o que quiser depois da conexão OBD
                     Toast.makeText(context, "OBD conectado, bom percurso!", Toast.LENGTH_SHORT).show();
+                    isObdOff = false; //Desabilita o teste
 
                 } else if (connectionStatusMsg.equals(getString(R.string.connect_lost))) {
                     Toast.makeText(context, "A conexão com o OBD foi perdida!", Toast.LENGTH_SHORT).show();
@@ -213,25 +243,39 @@ public class ObdView extends AppCompatActivity {
     //Método utilizado para fins de testes locais
     public void atualizaTrajetoOffline(){
         trajeto = trajetoDao.buscaUltimoTrajeto();
-
-        trajeto.setConsumo("999");
-        trajeto.setDistancia_km("9999");
-        trajeto.setEmpresa_id(1);
         trajeto.setHora_fim(new Date().toString());
-        trajeto.setHora_inicio(new Date().toString());
-        trajeto.setTemperatura_motor("21812");
-        trajeto.setVelocidade_maxima("89622");
-        trajeto.setUsuario_id(1);
-        trajeto.setVeiculo_id(1);
+        //Pegar valores aleatorios para o teste sem o Scanner
+        Random r = new Random();
+        tempMotor = r.nextInt(280 - 165) + 165;
+        velocidade = r.nextInt(80 - 65) + 65;
+
+        consumo = r.nextInt(270 - 155) + 165;
+        distancia = r.nextInt(180 - 165) + 170;
+
+        trajeto.setConsumo(consumo+"");
+        trajeto.setDistancia_km(distancia+"");
 
 
+        trajeto.setTemperatura_motor(tempMotor+"");
+        trajeto.setVelocidade_maxima(velocidade+"");
+
+
+            /*trajeto.setEmpresa_id(1);
+            trajeto.setUsuario_id(1);
+            trajeto.setVeiculo_id(1); */
+        trajeto.setEmpresa_id(trajeto.getEmpresa_id());
+        trajeto.setUsuario_id(trajeto.getUsuario_id());
+        trajeto.setVeiculo_id(trajeto.getVeiculo_id());
 
         trajetoDao.edita(trajeto);
-        viewDistancia.setText("Distancia Percorrida: " + trajeto.getDistancia_km());
-        viewConsumo.setText("Combustível consumido: " + trajeto.getConsumo());
-        viewVelocidade.setText("Velocidade: " + trajeto.getVelocidade_maxima() + "KM/H");
+
+        viewDistancia.setText("Distancia Percorrida: " + trajeto.getDistancia_km() + " Km");
+        viewConsumo.setText("Combustível consumido: " + trajeto.getConsumo() + " Litros");
+        viewVelocidade.setText("Velocidade: " + trajeto.getVelocidade_maxima() + " Km/H");
         viewTemp.setText("Temperatura motor: " + trajeto.getTemperatura_motor() + " Cº");
-    }
+        //Toast.makeText(ObdView.this, "Chamou timer!", Toast.LENGTH_SHORT).show();
+
+    };
 
     @Override
     protected void onDestroy() {

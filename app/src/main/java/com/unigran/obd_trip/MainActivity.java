@@ -119,7 +119,12 @@ public class MainActivity extends AppCompatActivity {
             //Caso ocorra um erro ao enviar o trajeto
             @Override
             public void onFailure(Call<Trajeto> call, Throwable t) {
-                Toast.makeText(getApplicationContext(), "Verifique sua conexão!", Toast.LENGTH_SHORT).show();
+                if(t.getMessage().equals("Body parameter value must not be null.")){
+                    Toast.makeText(getApplicationContext(), "Não existem trajetos para serem eviados!", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(getApplicationContext(), "Verifique sua conexão! " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
                 t.printStackTrace();
             }
 
